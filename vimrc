@@ -24,3 +24,9 @@ set tabstop=4 		" tab == 4 spaces
 set shiftwidth=4
 set softtabstop=4
 set expandtab
+
+" stop nagging about unsaved buffers!
+set hidden
+
+" my dotfiles manager configs
+au BufNewFile,BufRead dfscheme set filetype=json
