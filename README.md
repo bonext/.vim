@@ -23,6 +23,7 @@ Included plugins
 
 * [vim-sensible](https://github.com/tpope/vim-sensible)
 * [vim-commentary](https://github.com/tpope/vim-commentary)
+* [nerdtree](https://github.com/scrooloose/nerdtree)
 
 Considered plugins
 ------------------
