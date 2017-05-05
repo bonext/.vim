@@ -14,7 +14,9 @@ set encoding=utf-8
 scriptencoding utf-8
 
 " fancy text wrap
-set breakindent
+if has("patch-7.4.354")
+    set breakindent
+endif
 set showbreak=⤷\ 
 
 " Russian with Ctrl+^
