@@ -30,7 +30,10 @@ set imsearch=0
 " highlight lCursor guifg=NONE guibg=Cyan " highlight cursor
 
 " numbers
-set number
+" set number
+
+" virtual space
+set virtualedit=block
 
 " tab size
 set tabstop=4 		" tab == 4 spaces
@@ -45,4 +48,8 @@ set hidden
 au BufNewFile,BufRead dfscheme set filetype=json
 
 " colorscheme
-colorscheme base16-default-dark
+if has("gui_running")
+    colorscheme base16-eighties
+else
+    colorscheme default
+endif
