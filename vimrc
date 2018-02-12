@@ -53,3 +53,9 @@ if has("gui_running")
 else
     colorscheme default
 endif
+
+" paste toggle (no more weirndess when pasting to console vim!)
+set pastetoggle=<F2>
+
+" imap hack
+" imap jk <ESC>
