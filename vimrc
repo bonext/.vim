@@ -51,7 +51,13 @@ au BufNewFile,BufRead dfscheme set filetype=json
 if has("gui_running")
     colorscheme base16-eighties
 else
-    colorscheme default
+	" match base16 colorscheme in bash
+	if filereadable(expand("~/.vimrc_background"))
+		let base16colorspace=256
+		source ~/.vimrc_background
+	else
+		colorscheme default
+	endif
 endif
 
 " paste toggle (no more weirndess when pasting to console vim!)
@@ -59,3 +65,4 @@ set pastetoggle=<F2>
 
 " imap hack
 " imap jk <ESC>
+
