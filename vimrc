@@ -66,3 +66,7 @@ set pastetoggle=<F2>
 " imap hack
 " imap jk <ESC>
 
+set wildignore+=*.pyc,*.o,*.obj,*.svn,*.swp,*.class,*.hg,*.DS_Store,*.min.*,*.egg-info
+
+" hide stuff from NERDTree
+let NERDTreeRespectWildIgnore=1
