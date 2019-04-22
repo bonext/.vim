@@ -45,12 +45,10 @@ set expandtab
 set hidden
 
 " my dotfiles manager configs
-au BufNewFile,BufRead dfscheme set filetype=json
+" au BufNewFile,BufRead dfscheme set filetype=json
 
 " colorscheme
-if has("gui_running")
-    colorscheme base16-eighties
-else
+if !has("gui_running")
 	" match base16 colorscheme in bash
 	if filereadable(expand("~/.vimrc_background"))
 		let base16colorspace=256
