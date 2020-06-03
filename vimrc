@@ -17,7 +17,7 @@ scriptencoding utf-8
 if has("patch-7.4.354")
     set breakindent
 endif
-set showbreak=⤷\ 
+set showbreak=⤷\
 
 " Russian with Ctrl+^
 if g:os == "Darwin"
@@ -74,3 +74,6 @@ augroup vimrc
   " write.
   autocmd BufRead,BufWritePre,FileWritePre * silent! %s/[\r \t]\+$//
 augroup END
+
+" line limiter
+set colorcolumn=80
