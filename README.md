@@ -9,7 +9,7 @@ adding it (and all other plugins) as [git subtrees][2]
 Installation
 ------------
 
-`$ git clone --recursive https://github.com/bonext/vim-dotfiles ~/.vim`
+`$ git clone https://github.com/bonext/vim-dotfiles ~/.vim`
 
 ### Installing a new plugin
 
