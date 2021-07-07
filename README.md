@@ -18,6 +18,12 @@ $ cd ~/.vim
 $ git subtree add --prefix bundle/<plugin name> <plugin.git> master --squash
 ```
 
+### Updating a plugin
+```
+$ cd ~/.vim
+$ git subtree pull --prefix bundle/<plugin name> <plugin.git> master --squash
+```
+
 Included plugins
 -----------------
 * [base16-vim](https://github.com/chriskempson/base16-vim)
