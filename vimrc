@@ -48,21 +48,12 @@ set hidden
 " au BufNewFile,BufRead dfscheme set filetype=json
 
 " colorscheme
-if !has("gui_running")
-	" match base16 colorscheme in bash
-	if filereadable(expand("~/.vimrc_background"))
-		let base16colorspace=256
-		source ~/.vimrc_background
-	else
-		colorscheme default
-	endif
-endif
+" cf. https://github.com/altercation/vim-colors-solarized
+set background=dark
+colorscheme solarized
 
 " paste toggle (no more weirndess when pasting to console vim!)
 set pastetoggle=<F5>
-
-" imap hack
-" imap jk <ESC>
 
 set wildignore+=*.pyc,*.o,*.obj,*.svn,*.swp,*.class,*.hg,*.DS_Store,*.min.*,*.egg-info
 
