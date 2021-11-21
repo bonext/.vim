@@ -1,13 +1,8 @@
 vim-dotfiles
 ============
+Specific setup for my laptop.
 
-Just another vim config to be shared among my machines.
-
-I manage everything with [vim-pathogen][1]
-adding it (and all other plugins) as [git subtrees][2]
-
-Note that I installed [solarized colors for xterm][4] as recommended in
-[vim-colors-solarized readme][5].
+Setup of [vim-lsp][6] + [clangd][7] in progress
 
 Installation
 ------------
@@ -41,6 +36,8 @@ Included plugins
 * [vim-pathogen][1]
 * [vim-sensible](https://github.com/tpope/vim-sensible)
 * [solarized](https://github.com/altercation/vim-colors-solarized)
+* [async.vim](https://github.com/prabirshrestha/async.vim)
+* [vim-lsp][6]
 
 Considered plugins
 ------------------
@@ -58,3 +55,5 @@ More info about git subtrees
 [3]: https://www.netways.de/en/blog/2016/01/14/working-with-git-subtree/
 [4]: https://github.com/altercation/solarized/tree/master/xresources
 [5]: https://github.com/altercation/vim-colors-solarized#important-note-for-terminal-users
+[6]: https://github.com/prabirshrestha/vim-lsp
+[7]: https://clangd.llvm.org/
