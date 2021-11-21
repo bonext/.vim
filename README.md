@@ -4,6 +4,25 @@ Specific setup for my laptop.
 
 Setup of [vim-lsp][6] + [clangd][7] in progress
 
+Setup as C IDE Progress
+-----------------------
+**Status:** it works, but no shortcuts yet, also no linting and no semantic
+highlighting (at least with my setup).
+
+I used the following links as inspiration:
+
+- https://chmanie.com/post/2020/07/17/modern-c-development-in-neovim/
+- https://jonasdevlieghere.com/vim-lsp-clangd/
+- https://www.reddit.com/r/vim/comments/b33lc1/a_guide_to_lsp_auto_completion_in_vim/
+- https://www.reddit.com/r/vim/comments/7lnhrt/which_lsp_plugin_should_i_use/
+
+I use [Bear][8] to get `compile_commands.json`
+
+### Things to consider
+
+- https://github.com/dense-analysis/ale
+- https://github.com/xavierd/clang_complete
+
 Installation
 ------------
 
@@ -23,7 +42,6 @@ $ git subtree pull --prefix bundle/<plugin name> <plugin.git> master --squash
 ```
 
 ### Removing a plugin
-I couldn't find any info on that, except [this post][3] with no references, but this seems to work:
 ```
 $ git rm bundle/<plugin name>
 $ git commit -m "Removed <plugin name>"
@@ -39,17 +57,6 @@ Included plugins
 * [async.vim](https://github.com/prabirshrestha/async.vim)
 * [vim-lsp][6]
 
-Considered plugins
-------------------
-
-* [vim-sleuth](https://github.com/tpope/vim-sleuth)
-
-More info about git subtrees
-----------------------------
-- `man git subtree`
-- https://www.atlassian.com/git/tutorials/git-subtree
-- https://blog.developer.atlassian.com/the-power-of-git-subtree
-
 [1]: https://github.com/tpope/vim-pathogen
 [2]: https://gist.github.com/SKempin/b7857a6ff6bddb05717cc17a44091202
 [3]: https://www.netways.de/en/blog/2016/01/14/working-with-git-subtree/
@@ -57,3 +64,4 @@ More info about git subtrees
 [5]: https://github.com/altercation/vim-colors-solarized#important-note-for-terminal-users
 [6]: https://github.com/prabirshrestha/vim-lsp
 [7]: https://clangd.llvm.org/
+[8]: https://github.com/rizsotto/Bear
