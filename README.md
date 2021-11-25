@@ -56,6 +56,7 @@ Included plugins
 * [solarized](https://github.com/altercation/vim-colors-solarized)
 * [async.vim](https://github.com/prabirshrestha/async.vim)
 * [vim-lsp][6]
+* [vim-obsession](https://github.com/tpope/vim-obsession)
 
 [1]: https://github.com/tpope/vim-pathogen
 [2]: https://gist.github.com/SKempin/b7857a6ff6bddb05717cc17a44091202
