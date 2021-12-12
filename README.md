@@ -23,6 +23,13 @@ I use [Bear][8] to get `compile_commands.json`
 - https://github.com/dense-analysis/ale
 - https://github.com/xavierd/clang_complete
 
+Setup as Common Lisp IDE progress
+---------------------------------
+
+No progress yet, consider installing [vlime][9]
+
+Also trying out [parinfer][10]
+
 Installation
 ------------
 
@@ -66,3 +73,5 @@ Included plugins
 [6]: https://github.com/prabirshrestha/vim-lsp
 [7]: https://clangd.llvm.org/
 [8]: https://github.com/rizsotto/Bear
+[9]: https://github.com/vlime/vlime
+[10]: https://github.com/eraserhd/parinfer-rust

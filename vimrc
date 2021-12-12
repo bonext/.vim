@@ -30,7 +30,11 @@ set imsearch=0
 " highlight lCursor guifg=NONE guibg=Cyan " highlight cursor
 
 " numbers
-" set number
+set number
+
+" mouse
+" maybe `set mouse=nv` instead so it's not available in insert mode
+set mouse=nv
 
 " virtual space
 set virtualedit=block
