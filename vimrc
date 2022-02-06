@@ -94,3 +94,6 @@ if executable('clangd12')
         \ 'whitelist': ['c', 'cpp', 'objc', 'objcpp'],
         \ })
 endif
+
+" rainbow brackets (for lisp)
+let g:rainbow_active = 1
