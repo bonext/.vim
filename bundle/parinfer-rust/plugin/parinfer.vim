@@ -237,7 +237,7 @@ function! s:process_buffer() abort
         silent! undojoin
         try
           call setline(l:changed[0]+1, l:lines[l:changed[0]:l:changed[-1]])
-        catch /E5\(23\|78\):/ " not allowed here / not allowed to change text here
+        catch /E5\(23\|78\|65\):/ " not allowed here / not allowed to change text here / not allowed to chnage text or change window
           " If an event doesn't allow us to modify the buffer, that's OK.
           " Usually another event will happen before a redraw.
           call s:log('not-allowed-here', {})
@@ -291,11 +291,11 @@ function! s:initialize_buffer() abort
 endfunction
 
 augroup Parinfer
-  autocmd FileType clojure,scheme,lisp,racket,hy,fennel,janet,carp,wast,yuck call <SID>initialize_buffer()
+  autocmd FileType clojure,scheme,lisp,racket,hy,fennel,janet,carp,wast,yuck,dune call <SID>initialize_buffer()
 augroup END
 
 " Handle the case where parinfer was lazy-loaded
-if (&filetype ==? 'clojure' || &filetype ==? 'scheme' || &filetype ==? 'lisp' || &filetype ==? 'racket' || &filetype ==? 'hy' || &filetype ==? 'fennel' || &filetype ==? 'janet' || &filetype ==? 'carp' || &filetype ==? 'wast' || &filetype ==? 'yuck')
+if (&filetype ==? 'clojure' || &filetype ==? 'scheme' || &filetype ==? 'lisp' || &filetype ==? 'racket' || &filetype ==? 'hy' || &filetype ==? 'fennel' || &filetype ==? 'janet' || &filetype ==? 'carp' || &filetype ==? 'wast' || &filetype ==? 'yuck' || &filetype ==? 'dune')
   call <SID>initialize_buffer()
 endif
 
