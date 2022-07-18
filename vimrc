@@ -71,7 +71,7 @@ augroup vimrc
 augroup END
 
 " line limiter
-set colorcolumn=80
+set colorcolumn=120
 
 " NERDTree
 " Most of these come from official README:
@@ -85,6 +85,7 @@ autocmd BufEnter * if bufname('#') =~ 'NERD_tree_\d\+' && bufname('%') !~ 'NERD_
 autocmd BufEnter * if tabpagenr('$') == 1 && winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() |
     \ quit | endif
 
+" lsp
 " See https://github.com/prabirshrestha/vim-lsp/wiki/Servers-Clangd
 " I only have clangd12 binary, which I use accordingly
 if executable('clangd12')

@@ -1,5 +1,5 @@
 " font
-set guifont=Fira\ Code\ 11
+set guifont=Cascadia\ Code\ 11
 
 " gui parts
 set guioptions-=m
