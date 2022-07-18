@@ -1,7 +1,8 @@
 let s:enabled = 0
 let s:already_setup = 0
 let s:Stream = lsp#callbag#makeSubject()
-let s:servers = {} " { lsp_id, server_info, init_callbacks, init_result, buffers: { path: { changed_tick } }
+" workspace_folders = { 'uri': { uri, name } }
+let s:servers = {} " { lsp_id, server_info, workspace_folders, init_callbacks, init_result, buffers: { path: { changed_tick } }
 let s:last_command_id = 0
 let s:notification_callbacks = [] " { name, callback }
 
@@ -29,6 +30,7 @@ augroup _lsp_silent_
     autocmd User lsp_complete_done silent
     autocmd User lsp_float_opened silent
     autocmd User lsp_float_closed silent
+    autocmd User lsp_float_focused silent
     autocmd User lsp_buffer_enabled silent
     autocmd User lsp_diagnostics_updated silent
     autocmd User lsp_progress_updated silent
@@ -62,6 +64,7 @@ function! lsp#enable() abort
     call lsp#internal#document_highlight#_enable()
     call lsp#internal#diagnostics#_enable()
     call lsp#internal#document_code_action#signs#_enable()
+    call lsp#internal#semantic#_enable()
     call lsp#internal#show_message_request#_enable()
     call lsp#internal#show_message#_enable()
     call lsp#internal#work_done_progress#_enable()
@@ -78,6 +81,7 @@ function! lsp#disable() abort
     call lsp#internal#document_highlight#_disable()
     call lsp#internal#diagnostics#_disable()
     call lsp#internal#document_code_action#signs#_disable()
+    call lsp#internal#semantic#_disable()
     call lsp#internal#show_message_request#_disable()
     call lsp#internal#show_message#_disable()
     call lsp#internal#work_done_progress#_disable()
@@ -140,7 +144,7 @@ let s:color_map = {
 \ 'starting': 'MoreMsg',
 \ 'failed': 'WarningMsg',
 \ 'running': 'Keyword',
-\ 'not running': 'NonText'
+\ 'not running': 'Comment'
 \}
 
 " Print the current status of all servers (if called with no arguments)
@@ -166,10 +170,12 @@ function! lsp#register_server(server_info) abort
     if has_key(s:servers, l:server_name)
         call lsp#log('lsp#register_server', 'server already registered', l:server_name)
     endif
+    " NOTE: workspace_folders is dict for faster lookup instead of array
     let s:servers[l:server_name] = {
         \ 'server_info': a:server_info,
         \ 'lsp_id': 0,
         \ 'buffers': {},
+        \ 'workspace_folders': {},
         \ }
     call lsp#log('lsp#register_server', 'server registered', l:server_name)
     doautocmd <nomodeline> User lsp_register_server
@@ -213,7 +219,7 @@ function! s:register_events() abort
             autocmd TextChangedP * call s:on_text_document_did_change()
         endif
         if g:lsp_untitled_buffer_enabled
-            autocmd FileType * call s:on_filetype_changed(bufnr('<afile>'))
+            autocmd FileType * call s:on_filetype_changed(bufnr(expand('<afile>')))
         endif
     augroup END
 
@@ -407,7 +413,7 @@ endfunction
 function! s:ensure_start(buf, server_name, cb) abort
     let l:path = lsp#utils#get_buffer_path(a:buf)
 
-    if lsp#utils#is_remote_uri(l:path)
+    if lsp#utils#is_remote_uri(l:path) || !has_key(s:servers, a:server_name)
         let l:msg = s:new_rpc_error('ignoring start server due to remote uri', { 'server_name': a:server_name, 'uri': l:path})
         call lsp#log(l:msg)
         call a:cb(l:msg)
@@ -448,14 +454,17 @@ function! s:ensure_start(buf, server_name, cb) abort
         endif
 
         call lsp#log('Starting server', a:server_name, l:cmd)
-
-        let l:lsp_id = lsp#client#start({
-            \ 'cmd': l:cmd,
-            \ 'on_stderr': function('s:on_stderr', [a:server_name]),
-            \ 'on_exit': function('s:on_exit', [a:server_name]),
-            \ 'on_notification': function('s:on_notification', [a:server_name]),
-            \ 'on_request': function('s:on_request', [a:server_name]),
-            \ })
+        let l:opts = {
+        \ 'cmd': l:cmd,
+        \ 'on_stderr': function('s:on_stderr', [a:server_name]),
+        \ 'on_exit': function('s:on_exit', [a:server_name]),
+        \ 'on_notification': function('s:on_notification', [a:server_name]),
+        \ 'on_request': function('s:on_request', [a:server_name]),
+        \ }
+        if has_key(l:server_info, 'env')
+          let l:opts.env = l:server_info.env
+        endif
+        let l:lsp_id = lsp#client#start(l:opts)
     endif
 
     if l:lsp_id > 0
@@ -541,8 +550,27 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \       'references': {
     \           'dynamicRegistration': v:false,
     \       },
-    \       'semanticHighlightingCapabilities': {
-    \           'semanticHighlighting': lsp#ui#vim#semantic#is_enabled()
+    \       'semanticTokens': {
+    \           'dynamicRegistration': v:false,
+    \           'requests': {
+    \               'range': v:false,
+    \               'full': lsp#internal#semantic#is_enabled()
+    \                     ? {'delta': v:true}
+    \                     : v:false
+    \
+    \           },
+    \           'tokenTypes': [
+    \               'type', 'class', 'enum', 'interface', 'struct',
+    \               'typeParameter', 'parameter', 'variable', 'property',
+    \               'enumMember', 'event', 'function', 'method', 'macro',
+    \               'keyword', 'modifier', 'comment', 'string', 'number',
+    \               'regexp', 'operator'
+    \           ],
+    \           'tokenModifiers': [],
+    \           'formats': ['relative'],
+    \           'overlappingTokenSupport': v:false,
+    \           'multilineTokenSupport': v:false,
+    \           'serverCancelSupport': v:false
     \       },
     \       'publishDiagnostics': {
     \           'relatedInformation': v:true,
@@ -564,7 +592,8 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \   },
     \   'workspace': {
     \       'applyEdit': v:true,
-    \       'configuration': v:true
+    \       'configuration': v:true,
+    \       'workspaceFolders': g:lsp_experimental_workspace_folders ? v:true : v:false,
     \   },
     \ }
 endfunction
@@ -597,6 +626,7 @@ function! s:ensure_init(buf, server_name, cb) abort
         let l:root_uri = lsp#utils#get_default_root_uri()
     endif
     let l:server['server_info']['_root_uri_resolved'] = l:root_uri
+    let l:server['workspace_folders'][l:root_uri] = { 'name': l:root_uri, 'uri': l:root_uri }
 
     if has_key(l:server_info, 'capabilities')
         let l:capabilities = l:server_info['capabilities']
@@ -615,6 +645,15 @@ function! s:ensure_init(buf, server_name, cb) abort
     \     'trace': 'off',
     \   },
     \ }
+    
+    let l:workspace_capabilities = get(l:capabilities, 'workspace', {})
+    if get(l:workspace_capabilities, 'workspaceFolders', v:false)
+        " TODO: extract folder name for l:root_uri
+        let l:server_info['workspaceFolders'] = [
+            \ { 'uri': l:root_uri, 'name': l:root_uri }
+            \ ]
+        let l:request['params']['workspaceFolders'] = l:server_info['workspaceFolders']
+    endif
 
     if has_key(l:server_info, 'initialization_options')
         let l:request.params['initializationOptions'] = l:server_info['initialization_options']
@@ -644,7 +683,6 @@ endfunction
 
 function! s:text_changes(buf, server_name) abort
     let l:sync_kind = lsp#capabilities#get_text_document_change_sync_kind(a:server_name)
-
     " When syncKind is None, return null for contentChanges.
     if l:sync_kind == 0
         return v:null
@@ -728,6 +766,10 @@ function! s:ensure_open(buf, server_name, cb) abort
         return
     endif
 
+    if lsp#capabilities#has_workspace_folders_change_notifications(a:server_name)
+        call s:workspace_add_folder(a:server_name)
+    endif
+
     call s:update_file_content(a:buf, a:server_name, lsp#utils#buffer#_get_lines(a:buf))
 
     let l:buffer_info = { 'changed_tick': getbufvar(a:buf, 'changedtick'), 'version': 1, 'uri': l:path }
@@ -745,6 +787,24 @@ function! s:ensure_open(buf, server_name, cb) abort
     let l:msg = s:new_rpc_success('textDocument/open sent', { 'server_name': a:server_name, 'path': l:path, 'filetype': getbufvar(a:buf, '&filetype') })
     call lsp#log(l:msg)
     call a:cb(l:msg)
+endfunction
+
+function! s:workspace_add_folder(server_name) abort
+    if !g:lsp_experimental_workspace_folders | return | endif
+    let l:server = s:servers[a:server_name]
+    let l:server_info = l:server['server_info']
+    let l:root_uri = has_key(l:server_info, 'root_uri') ?  l:server_info['root_uri'](l:server_info) : lsp#utils#get_default_root_uri()
+    if !has_key(l:server['workspace_folders'], l:root_uri)
+        let l:workspace_folder = { 'name': l:root_uri, 'uri': l:root_uri }
+        call lsp#log('adding workspace folder', a:server_name, l:workspace_folder)
+        call s:send_notification(a:server_name, {
+            \ 'method': 'workspace/didChangeWorkspaceFolders',
+            \ 'params': {
+            \    'added': [l:workspace_folder],
+            \  }
+            \ })
+        let l:server['workspace_folders'][l:root_uri] = l:workspace_folder
+    endif
 endfunction
 
 function! s:send_request(server_name, data) abort
@@ -788,6 +848,7 @@ function! s:on_exit(server_name, id, data, event) abort
         if has_key(l:server, 'init_result')
             unlet l:server['init_result']
         endif
+        let l:server['workspace_folders'] = {}
         call lsp#stream(1, { 'server': '$vimlsp',
             \ 'response': { 'method': '$/vimlsp/lsp_server_exit', 'params': { 'server': a:server_name } } })
         doautocmd <nomodeline> User lsp_server_exit
@@ -806,14 +867,7 @@ function! s:on_notification(server_name, id, data, event) abort
     endif
     call lsp#stream(1, l:stream_data) " notify stream before callbacks
 
-    if lsp#client#is_server_instantiated_notification(a:data)
-        if has_key(l:response, 'method')
-            if l:response['method'] ==# 'textDocument/semanticHighlighting'
-                call lsp#ui#vim#semantic#handle_semantic(a:server_name, a:data)
-            endif
-            " NOTE: this is legacy code, use stream instead of handling notifications here
-        endif
-    else
+    if !lsp#client#is_server_instantiated_notification(a:data)
         let l:request = a:data['request']
         let l:method = l:request['method']
         if l:method ==# 'initialize'
@@ -838,6 +892,11 @@ function! s:on_request(server_name, id, request) abort
     elseif a:request['method'] ==# 'workspace/configuration'
         let l:response_items = map(a:request['params']['items'], { key, val -> lsp#utils#workspace_config#get_value(a:server_name, val) })
         call s:send_response(a:server_name, { 'id': a:request['id'], 'result': l:response_items })
+    elseif a:request['method'] ==# 'workspace/workspaceFolders'
+        let l:server_info = s:servers[a:server_name]['server_info']
+        if has_key(l:server_info, 'workspaceFolders')
+            call s:send_response(a:server_name, { 'id': a:request['id'], 'result': l:server_info['workspaceFolders']})
+        endif
     elseif a:request['method'] ==# 'window/workDoneProgress/create'
         call s:send_response(a:server_name, { 'id': a:request['id'], 'result': v:null})
     else
@@ -1119,10 +1178,9 @@ function! s:add_didchange_queue(buf) abort
         endfor
         return
     endif
-    if index(s:didchange_queue, a:buf) != -1
-        return
+    if index(s:didchange_queue, a:buf) == -1
+        call add(s:didchange_queue, a:buf)
     endif
-    call add(s:didchange_queue, a:buf)
     call lsp#log('s:send_didchange_queue() will be triggered')
     call timer_stop(s:didchange_timer)
     let l:lazy = &updatetime > 1000 ? &updatetime : 1000
@@ -1170,6 +1228,10 @@ endfunction
 " 'percentage': 0 - 100 or not exist
 function! lsp#get_progress() abort
     return lsp#internal#work_done_progress#get_progress()
+endfunction
+
+function! lsp#document_hover_preview_winid() abort
+    return lsp#internal#document_hover#under_cursor#getpreviewwinid()
 endfunction
 
 "
